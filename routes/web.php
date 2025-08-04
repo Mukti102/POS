@@ -6,6 +6,7 @@ use App\Http\Controllers\DebtController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/post/checkout',[TransactionController::class,'checkout'])->name('pos.checkout');
 
     Route::resource('debt',DebtController::class);
+    Route::get('/setting',[SettingController::class,'index'])->name('setting.index');
+    Route::post('/setting',[SettingController::class,'update'])->name('setting.update');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/update-avatar',[ProfileController::class,'updateAvatar'])->name('update.avatar');

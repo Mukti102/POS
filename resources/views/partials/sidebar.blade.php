@@ -55,6 +55,12 @@
                             Profil</span>
                     </a>
                 </li>
+                <li class="{{ request()->is('setting') ? 'active' : '' }}">
+                    <a href="{{ route('setting.index') }}"><img src="{{ asset('/assets/img/icons/settings.svg') }}"
+                            alt="img" /><span>
+                            Setting</span>
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
