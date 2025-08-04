@@ -11,7 +11,7 @@ use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', function () {
@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/post/checkout',[TransactionController::class,'checkout'])->name('pos.checkout');
 
     Route::resource('debt',DebtController::class);
+    Route::get('/print/debt',[DebtController::class,'print'])->name('debt.print');
     Route::get('/setting',[SettingController::class,'index'])->name('setting.index');
     Route::post('/setting',[SettingController::class,'update'])->name('setting.update');
 

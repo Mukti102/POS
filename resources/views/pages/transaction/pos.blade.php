@@ -19,7 +19,7 @@
                             @foreach ($categories as $key => $category)
                                 <li class="{{ $key === 0 ? 'active' : '' }}" id="{{ $category->id }}">
                                     <div class="product-details">
-                                        <img src="/assets/img/product/product62.png" alt="img" />
+                                        <img src="{{ asset('storage/' . $category->photo) }}" alt="img" />
                                         <h6>{{ $category->name }}</h6>
                                     </div>
                                 </li>
@@ -36,9 +36,10 @@
                                                     data-price="{{ $product->selling_price }}"
                                                     data-category="{{ $product->category->name }}"
                                                     data-stock="{{ $product->stock }}"
-                                                    data-image="assets/img/product/product29.jpg">
+                                                    data-image="{{ asset('storage/' . $product->image) }}">
                                                     <div class="productsetimg">
-                                                        <img src="assets/img/product/product29.jpg" alt="img" />
+                                                        <img src="{{ asset('storage/' . $product->image) }}"
+                                                            alt="img" />
                                                         <h6>Qty: {{ $product->stock }}</h6>
                                                         <div class="check-product">
                                                             <i class="fa fa-check"></i>
@@ -507,8 +508,8 @@
                         <div class="productimg">
                           <div class="productimgs">
                             <img
-                              src="assets/img/product/product30.jpg"
-                              alt="img"
+                              src="${item.image}"
+                              alt="${item.image}"
                             />
                           </div>
                           <div class="productcontet">
@@ -520,7 +521,7 @@
                                 data-bs-toggle="modal"
                                 data-bs-target="#edit"
                                 ><img
-                                  src="assets/img/icons/edit-5.svg"
+                                  src="/assets/img/icons/edit-5.svg"
                                   alt="img"
                               /></a>
                             </h4>
@@ -545,7 +546,7 @@
                       <li>${formatRupiah(itemTotal)}</li>
                       <li>
                         <a class="confirm-text" href="javascript:void(0);"
-                          ><img src="assets/img/icons/delete-2.svg" alt="img"
+                          ><img src="/assets/img/icons/delete-2.svg" alt="img"
                         /></a>
                       </li>
                       </ul>
@@ -588,7 +589,7 @@
 
             const totalYouShouldPay = $('#totalDisplay').text();
 
-           
+
             $('#paid').on('input', function() {
                 const total = calculateTotals();
                 const change = calculatePaidChange(total.total, $(this).val());

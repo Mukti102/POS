@@ -252,7 +252,7 @@ class TransactionController extends Controller
                 'total_debt' => $transaction->total,
                 'paid' => $transaction->paid,
                 'remaining' => $transaction->total - $transaction->paid,
-                'due_date' => now()->addMonth(), //default sebulan dari sekarang ,
+                'due_date' => now()->addMonth()->toDateString(), //default sebulan dari sekarang ,
                 'status' =>  $status
             ]);
         } catch (Exception $e) {
@@ -270,7 +270,7 @@ class TransactionController extends Controller
                 'paid' => $transaction->paid,
                 'remaining' => $transaction->total - $transaction->paid,
                 'status' => $transaction->paid >= $transaction->total ? 'lunas' : 'belum lunas',
-                'due_date' => now()->addMonth(), // kamu bisa buat optional kalau due_date tidak ingin berubah
+                'due_date' => now()->addMonth()->toDateString(), // kamu bisa buat optional kalau due_date tidak ingin berubah
             ]);
         } catch (Exception $e) {
             throw new \Exception('Gagal Update Debt');

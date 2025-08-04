@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Debt;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class DebtController extends Controller
@@ -13,13 +14,25 @@ class DebtController extends Controller
     public function index()
     {
         $hutangs = Debt::with('transaction.costumer')->get();
-        return view('pages.debt.index',compact('hutangs'));
+        return view('pages.debt.index', compact('hutangs'));
     }
+
+    public function print()
+    {
+        $debts = Debt::with('transaction.costumer')->get();
+
+        $pdf = Pdf::loadView('pages.debt.print', compact('debts'))
+         ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('daftar-debt.pdf'); // tampilkan preview di browser
+    }
+
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
+
     {
         //
     }
@@ -62,6 +75,6 @@ class DebtController extends Controller
     public function destroy(Debt $debt)
     {
         $debt->delete();
-        return back()->with('success','Berhasil Di Hapus');
+        return back()->with('success', 'Berhasil Di Hapus');
     }
 }

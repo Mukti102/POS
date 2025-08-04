@@ -42,7 +42,7 @@
                                 </td>
                                 <td class="productimgname">
                                     <a href="javascript:void(0);" class="product-img">
-                                        <img src="{{!$category->photo ? 'assets/img/product/noimage.png' : asset('storage/'.$category->photo)}}" alt="product" />
+                                        <img src="{{!$category->photo ? 'assets/img/product/noimage.png' : asset('storage/'. $category->photo)}}" alt="product" />
                                     </a>
                                     <a href="javascript:void(0);">{{ $category->name }}</a>
                                 </td>

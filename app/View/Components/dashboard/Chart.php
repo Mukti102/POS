@@ -49,6 +49,7 @@ class Chart extends Component
         // Simpan ke properti untuk dikirim ke Blade
         $this->revenueData = array_values($revenue);
         $this->profitData = array_values($profit);
+
     }
 
     public function render(): View|Closure|string

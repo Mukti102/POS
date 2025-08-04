@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -36,6 +37,10 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'photo' => 'nullable' // jika photo adalah file gambar
         ]);
+
+        if ($request->hasFile('photo')) {
+            $validate['photo'] = $request->file('photo')->store('category', 'public');
+        }
 
         try {
             Category::create($validate);
@@ -72,6 +77,16 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'photo' => 'nullable' // jika photo adalah file gambar
         ]);
+
+        if ($request->hasFile('photo')) {
+            $oldPhoto = $category->photo;
+            if ($oldPhoto && Storage::disk('public')->exists($oldPhoto)) {
+                Storage::disk('public')->delete($oldPhoto);
+            }
+
+            $photoPath = $request->file('photo')->store('category','public');
+            $validate['photo'] = $photoPath;
+        }
 
         try {
             $category->update($validate);

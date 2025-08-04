@@ -8,6 +8,12 @@
                             Dashboard</span>
                     </a>
                 </li>
+                <li class="{{ request()->is('pos') ? 'active' : '' }}">
+                    <a href="{{ route('pos') }}"><img src="{{ asset('assets/img/icons/quotation1.svg') }}"
+                            alt="img" /><span>
+                            POS</span>
+                    </a>
+                </li>
                 <li class="{{ request()->is('costumer') ? 'active' : '' }}">
                     <a href="{{ route('costumer.index') }}"><img src="{{ asset('assets/img/icons/users1.svg') }}"
                             alt="img" /><span>

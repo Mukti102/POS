@@ -5,7 +5,7 @@
         <x-layout.page-header title="Data Hutang Costumer" subtitle="View/Search Costumer Hutang">
         </x-layout.page-header>
         <x-table.table-wraper>
-            <x-table.table-top />
+            <x-table.table-top pdf="{{route('debt.print')}}" />
             <x-table.table-responsive>
                 <table class="table {{ $hutangs->count() <= 0 ? '' : 'datanew' }}">
                     <thead>
