@@ -17,6 +17,6 @@ class Transaction extends Model
     }
 
     public function debt(){
-        return $this->hasMany(Debt::class,'transaction_id');
+        return $this->hasOne(Debt::class,'transaction_id');
     }
 }

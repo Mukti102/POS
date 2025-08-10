@@ -11,4 +11,8 @@ class Debt extends Model
     public function transaction(){
         return $this->belongsTo(Transaction::class,'transaction_id');
     }
+
+    public function payments(){
+        return $this->hasMany(DebtPayment::class);
+    }
 }

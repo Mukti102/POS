@@ -3,10 +3,10 @@
     <x-alert />
     <div>
         <x-layout.page-header title="Data Transaksi" subtitle="View/Search transaction List">
-            <div class="page-btn">
+            {{-- <div class="page-btn">
                 <a href="{{ route('transaction.create') }}" class="btn btn-added"><img src="assets/img/icons/plus.svg"
                         alt="img" class="me-1" />Tambah</a>
-            </div>
+            </div> --}}
         </x-layout.page-header>
         <x-table.table-wraper>
             <x-table.table-top />
@@ -76,12 +76,12 @@
                                                     alt="img" />
                                                 Detail</a>
                                         </li>
-                                        <li>
+                                        {{-- <li>
                                             <a href="{{ route('transaction.edit', $transaction->id) }}"
                                                 class="dropdown-item"><img src="/assets/img/icons/edit.svg" class="me-2"
                                                     alt="img" />
                                                 Edit</a>
-                                        </li>
+                                        </li> --}}
                                         <li>
                                             <a href="javascript:void(0);" class="dropdown-item"><img
                                                     src="/assets/img/icons/download.svg" class="me-2"

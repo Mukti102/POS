@@ -25,11 +25,12 @@ class TransactionController extends Controller
 
     public function pos()
     {
-        $categories = Category::with('products')->get();
+        $categories = Category::with(['products' => function ($query) {
+            $query->where('stock', '>', 0);
+        }])->get();
         $costumers = Costumer::all();
-        $products = Product::with('category')->get();
         $transactions = Transaction::with('costumer')->where('transaction_date', now()->format('Y-m-d'))->get();
-        return view('pages.transaction.pos', compact('categories', 'costumers', 'products', 'transactions'));
+        return view('pages.transaction.pos', compact('categories', 'costumers', 'transactions'));
     }
 
 
@@ -48,15 +49,20 @@ class TransactionController extends Controller
 
         $reference = 'TRX-' . strtoupper(Str::random(6)) . '-' . now()->format('YmdHis');
 
+        // calculate total
+        $discount = (float) $request->subtotal * ((float)$request->discount / 100);
+        $total = (float) $request->subtotal - $discount;
+
         try {
             DB::beginTransaction();
 
             // Buat transaksi utama
             $transaction = Transaction::create([
                 'costumer_id' => $request->customer_id,
-                'total' => $request->total,
+                'total' => $total,
                 'paid' => $request->paid,
                 'change' => $request->change,
+                'discount' => $request->discount,
                 'reference' => $reference,
                 'status_payment' => $request->paid >= $request->total ? 'paid' : 'due',
                 'status' => $request->paid >= $request->total ? 'complete' : 'pending',
@@ -72,6 +78,10 @@ class TransactionController extends Controller
                 ]);
 
                 $this->updateProduct($prod->id, -$prod->quantity);
+            }
+
+            if ($transaction->status !== 'complete') {
+                $this->createDebt($transaction);
             }
 
             DB::commit();

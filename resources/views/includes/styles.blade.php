@@ -10,6 +10,9 @@
 
   <link rel="stylesheet" href="/assets/plugins/toastr/toatr.css" />
 
+<link rel="stylesheet" href="/assets/plugins/icons/feather/feather.css">
+
+<link rel="stylesheet" href="/assets/plugins/icons/ionic/ionicons.css">
   <link rel="stylesheet" href="{{ asset('assets/css/dataTables.bootstrap4.min.css') }}" />
 
   <link rel="stylesheet" href="{{ asset('assets/plugins/fontawesome/css/fontawesome.min.css') }}" />

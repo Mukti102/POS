@@ -1,9 +1,9 @@
 @extends('layouts.main')
 @section('content')
-    <x-dashboard.card-stats/>
+    <x-stats/>
     <div class="row">
-        <x-dashboard.chart/>
-        <x-dashboard.table-debt-expired/>
+        <x-chart/>
+        <x-debt-expired/>
     </div>
-    <x-dashboard.product-expired/>
+    <x-product-expired/>
 @endsection

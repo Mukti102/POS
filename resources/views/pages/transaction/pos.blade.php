@@ -1,8 +1,8 @@
 @extends('layouts.pos')
 @section('content')
-    <div id="global-loader">
+    {{-- <div id="global-loader">
         <div class="whirly-loader"></div>
-    </div>
+    </div> --}}
     <div class="main-wrappers">
         @include('partials.headerpos')
         <div class="page-wrapper ms-0">
@@ -116,6 +116,11 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="select-split">
+                                            <div class="select-group w-100">
+                                                <x-form.input-group name="discount" value="0" prefix="%" type="number" placeholder="Discount"  />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -138,8 +143,8 @@
                                             <h6 id="subtotalDisplay">Rp0.00</h6>
                                         </li>
                                         <li>
-                                            <h5>Tax (0%)</h5>
-                                            <h6 id="taxDisplay">Rp.0.00</h6>
+                                            <h5>Discount</h5>
+                                            <h6 id="discountDisplay">0</h6>
                                         </li>
                                         <li class="total-value">
                                             <h5>Total</h5>
@@ -558,14 +563,21 @@
                 updateCheckoutButton();
             }
 
-            function calculateTotals() {
-                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const tax = subtotal * TAX_RATE;
-                const total = subtotal + tax;
+            $('#discount').on('input',function(){
+                calculateTotals()
+                updateTotals();
+            })
 
+
+            function calculateTotals() {
+                const inputDiscount = parseFloat($('#discount').val());
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const discount = inputDiscount;
+                const total = subtotal -  subtotal * (inputDiscount / 100);
+                
                 return {
                     subtotal,
-                    tax,
+                    discount,
                     total
                 };
             }
@@ -573,10 +585,10 @@
             function updateTotals() {
                 const totals = calculateTotals();
                 const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
+                console.log(totals)
                 $('#totalItemsText').text(`Total items : ${totalItems}`);
                 $('#subtotalDisplay').text(`${formatRupiah(totals.subtotal)}`);
-                $('#taxDisplay').text(`${formatRupiah(totals.tax)}`);
+                $('#discountDisplay').text(`${totals.discount}%`);
                 $('#totalDisplay').text(`${formatRupiah(totals.total)}`);
                 $('#checkoutTotal').text(`${formatRupiah(totals.total)}`);
             }
@@ -628,7 +640,7 @@
                 receiptHTML += `
                         <hr>
                         <p>Subtotal: ${ formatRupiah(totals.subtotal)}</p>
-                        <p>Tax (10%): ${formatRupiah(totals.tax)}</p>
+                        <p>Discount: ${totals.discount}%</p>
                         <p><strong>Total: ${formatRupiah(totals.total)}</strong></p>
                         <hr>
                         <p style="text-align: center;">Thank you!</p>

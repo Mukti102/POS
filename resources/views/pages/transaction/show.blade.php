@@ -111,18 +111,18 @@
                           display: flex;
                           align-items: center;
                         ">
-                                    <img src="{{$product->product->image ? asset('storage/'.$product->product->image) : '/assets/img/product/product8.jpg'}}" alt="img" class="me-2"
-                                        style="width: 40px; height: 40px" />
-                                    {{$product->name}}
+                                    <img src="{{ $product->product->image ? asset('storage/' . $product->product->image) : '/assets/img/product/product8.jpg' }}"
+                                        alt="img" class="me-2" style="width: 40px; height: 40px" />
+                                    {{ $product->name }}
                                 </td>
-                                <td style="padding: 10px; vertical-align: top">{{$product->quantity}}</td>
+                                <td style="padding: 10px; vertical-align: top">{{ $product->quantity }}</td>
                                 <td style="padding: 10px; vertical-align: top">
-                                   Rp {{ number_format($product->product->selling_price, 0, ',', '.') }}
+                                    Rp {{ number_format($product->product->selling_price, 0, ',', '.') }}
                                 </td>
                                 <td style="padding: 10px; vertical-align: top">0.00</td>
                                 <td style="padding: 10px; vertical-align: top">0.00</td>
                                 <td style="padding: 10px; vertical-align: top">
-                                   Rp {{ number_format($product->subtotal, 0, ',', '.') }}
+                                    Rp {{ number_format($product->subtotal, 0, ',', '.') }}
                                 </td>
                             </tr>
                         @endforeach
@@ -131,26 +131,28 @@
                 </table>
             </div>
             <div class="row">
-                
+
                 <div class="row">
                     <div class="col-lg-6">
                         <div class="total-order w-100 max-widthauto m-auto mb-4">
                             <ul>
-                                <li>
-                                    <h4>Order Tax</h4>
-                                    <h5>Rp 0.00 (0.00%)</h5>
-                                </li>
-                                <li>
-                                    <h4>Discount</h4>
-                                    <h5>Rp 0.00</h5>
-                                </li>
+
+
                             </ul>
                         </div>
                     </div>
                     <div class="col-lg-6">
                         <div class="total-order w-100 max-widthauto m-auto mb-4">
                             <ul>
-                                
+                                <li>
+                                    <h4>Subtotal</h4>
+                                    <h5>Rp {{ number_format($transaction->transactionItems->sum('subtotal'), 0, ',', '.') }}
+                                    </h5>
+                                </li>
+                                <li>
+                                    <h4>Discount</h4>
+                                    <h5>{{ $transaction->discount ?? 0 }}%</h5>
+                                </li>
                                 <li class="total">
                                     <h4>Grand Total</h4>
                                     <h5>Rp {{ number_format($transaction->total, 0, ',', '.') }}</h5>

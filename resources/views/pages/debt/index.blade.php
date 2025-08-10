@@ -5,18 +5,15 @@
         <x-layout.page-header title="Data Hutang Costumer" subtitle="View/Search Costumer Hutang">
         </x-layout.page-header>
         <x-table.table-wraper>
-            <x-table.table-top pdf="{{route('debt.print')}}" />
+            <x-table.table-top pdf="{{ route('debt.print') }}" />
             <x-table.table-responsive>
-                <table class="table {{ $hutangs->count() <= 0 ? '' : 'datanew' }}">
+                <table class="table {{ $debts->count() <= 0 ? '' : 'datanew' }}">
                     <thead>
                         <tr>
                             <th>
                                 No
                             </th>
                             <th>Nama Costumer</th>
-                            <th>Nama Product</th>
-                            <th>Jumlah</th>
-                            <th>Harga Satuan</th>
                             <th>Total</th>
                             <th>Tebayar</th>
                             <th>Sisa</th>
@@ -25,37 +22,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($hutangs as $hutang)
+                        @forelse ($debts as $hutang)
                             <tr>
                                 <td>
                                     {{ $loop->iteration }}
                                 </td>
-                                <td>{{ $hutang->transaction->costumer->name }}</td>
+                                <td>{{ $hutang['costumer'] }}</td>
 
-                                <td>{{ $hutang->transaction->transactionItems->first()->product->name }}</td>
-                                <td>{{ $hutang->transaction->transactionItems->first()->quantity }}</td>
                                 <td>Rp
-                                    {{ number_format($hutang->transaction->transactionItems->first()->product->selling_price) }}
+                                    {{ number_format($hutang['total'], 0, ',', '.') }}
                                 </td>
-                                <td>Rp {{ number_format($hutang->total_debt, 0, ',', '.') }}</td>
-                                <td>Rp {{ number_format($hutang->paid, 0, ',', '.') }}</td>
-                                <td>Rp {{ number_format($hutang->remaining, 0, ',', '.') }}</td>
+                                <td>Rp {{ number_format($hutang['paid'], 0, ',', '.') }}</td>
+                                <td>Rp {{ number_format($hutang['remaining'], 0, ',', '.') }}</td>
                                 <td>
-                                    @if ($hutang->status !== 'lunas')
+                                    @if ($hutang['status'] !== 'lunas')
                                         <span class="badges bg-danger">Belum Lunas</span>
                                     @else
                                         <span class="badges bg-lightgreen">Lunas</span>
                                     @endif
 
                                 </td>
-                                <td class="d-flex gap-3">
-                                    <form action="{{ route('debt.destroy', $hutang->id) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="me-3 btn delete-button" href="javascript:void(0);">
-                                            <img src="assets/img/icons/delete.svg" alt="img" />
-                                        </button>
-                                    </form>
+                                <td class="d-flex gap-2">
+                                    <a href={{ route('detail.debts', $hutang['id']) }} class="btn btn-sm text-white bg-info" href="javascript:void(0);">
+                                        <i class="fa fa-eye" data-bs-toggle="tooltip" title="Lihat Detail"></i>
+                                    </a>
+
                                 </td>
                             </tr>
                         @empty

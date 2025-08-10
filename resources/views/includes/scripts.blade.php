@@ -15,6 +15,8 @@
 <script src="{{ asset('assets/plugins/apexchart/apexcharts.min.js') }}"></script>
 <script src="{{ asset('assets/plugins/apexchart/chart-data.js') }}"></script>
 
+<script src="/assets/js/feather.min.js"></script>
+
 
 
 <script src="/assets/plugins/toastr/toastr.min.js"></script>
