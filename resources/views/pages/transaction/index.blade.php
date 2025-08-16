@@ -10,8 +10,21 @@
         </x-layout.page-header>
         <x-table.table-wraper>
             <x-table.table-top />
+            <x-table.filter-input action="transaction.index">
+                <div class="col-lg-2 col-sm-6 col-12">
+                    <div class="form-group">
+                        <select class="select" name="branch_id">
+                            <option value="all" selected>Semua</option>
+                            @foreach ($branches as $branch)
+                                <option {{ $branch->id == $branchId ? 'selected' : '' }} value={{ $branch->id }}>
+                                    {{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </x-table.filter-input>
             <x-table.table-responsive>
-                <table class="table {{ $transactions->count() < 0 ? '' : 'datanew' }}">
+                <table class="table {{ $transactions->count() <= 0 ? '' : 'datanew' }}">
                     <thead>
                         <tr>
                             <th>
@@ -20,6 +33,7 @@
                                     <span class="checkmarks"></span>
                                 </label>
                             </th>
+                            <th>Cabang</th>
                             <th>Tanggal</th>
                             <th>Nama Costumer</th>
                             <th>Reference</th>
@@ -40,6 +54,8 @@
                                         <span class="checkmarks"></span>
                                     </label>
                                 </td>
+                                <td>{{ $transaction->branch->name }}</td>
+
                                 <td>{{ $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->translatedFormat('d F Y') : '-' }}
                                 </td>
                                 <td>{{ $transaction->costumer->name }}</td>

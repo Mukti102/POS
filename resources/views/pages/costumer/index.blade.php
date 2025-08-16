@@ -11,7 +11,7 @@
         <x-table.table-wraper>
             <x-table.table-top />
             <x-table.table-responsive>
-                <table class="table {{ $costumers->count() >= 0 ? '' : 'datanew' }}">
+                <table class="table {{ $costumers->count() <= 0 ? '' : 'datanew' }}">
                     <thead>
                         <tr>
                             <th>
@@ -40,7 +40,7 @@
                                     <form action="{{ route('costumer.destroy', $costumer->id) }}" method="POST">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="me-3 btn delete-button" href="javascript:void(0);">
+                                        <button type="button" class="me-3 btn delete-button" href="javascript:void(0);">
                                             <img src="assets/img/icons/delete.svg" alt="img" />
                                         </button>
                                     </form>

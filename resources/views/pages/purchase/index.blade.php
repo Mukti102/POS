@@ -2,7 +2,7 @@
 @section('content')
     <x-alert />
     <div>
-        <x-layout.page-header title="Pengadaan list" subtitle="View/Search Pengadaan List">
+        <x-layout.page-header title="Pengadaan Barang Cabang {{ optional($branches->where('id', $branchId)->first())->name }}" subtitle="View/Search Pengadaan List">
             <div class="page-btn">
                 <button data-bs-toggle="modal" data-bs-target="#addModal" href="addproduct.html" class="btn btn-added"><img
                         src="assets/img/icons/plus.svg" alt="img" class="me-1" />Tambah</button>
@@ -10,6 +10,18 @@
         </x-layout.page-header>
         <x-table.table-wraper>
             <x-table.table-top />
+            <x-table.filter-input action="pengadaan.index">
+                <div class="col-lg-2 col-sm-6 col-12">
+                    <div class="form-group">
+                        <select class="select" name="branch_id">
+                            @foreach ($branches as $branch)
+                                <option {{ $branch->id == $branchId ? 'selected' : '' }} value={{ $branch->id }}>
+                                    {{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </x-table.filter-input>
             <x-table.table-responsive>
                 <table class="table {{ $purchases->count() >= 0 ? '' : 'datanew' }}">
                     <thead>
@@ -17,6 +29,7 @@
                             <th>
                                 No
                             </th>
+                            <th>Nama Cabang</th>
                             <th>Nama Product</th>
                             <th>Jumlah</th>
                             <th>Total</th>
@@ -29,12 +42,13 @@
                                 <td>
                                     {{ $loop->iteration }}
                                 </td>
+                                <td>{{ $purchase->branch->name }}</td>
                                 <td class="productimgname">
                                     <a href="javascript:void(0);" class="product-img">
                                         <img src="{{ !$purchase->product->image ? 'assets/img/product/noimage.png' : asset('storage/' . $purchase->product->image) }}"
                                             alt="product" />
                                     </a>
-                                    <a href="javascript:void(0);">{{ $purchase->name }}</a>
+                                    <a href="javascript:void(0);">{{ $purchase->product->name }}</a>
                                 </td>
                                 <td>{{ $purchase->quantity }}</td>
                                 <td>Rp {{ number_format($purchase->cost_price, 0, ',', '.') }}</td>
@@ -57,7 +71,8 @@
                                 <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="editModalLabel{{ $purchase->id }}">Edit Pengadaan</h5>
+                                            <h5 class="modal-title" id="editModalLabel{{ $purchase->id }}">Edit Pengadaan
+                                            </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                 aria-label="Close"></button>
                                         </div>
@@ -66,10 +81,25 @@
                                             @method('PUT')
                                             <div class="modal-body row">
                                                 <div class="form-group">
+                                                    <label>Cabang</label>
+                                                    <select class="js-example-basic-single"
+                                                        id="branch_id-{{ $purchase->id }}" name="branch_id">
+
+                                                        <option value="" selected disabled>Pilih Product</option>
+                                                        @foreach ($branches as $branch)
+                                                            <option
+                                                                {{ $purchase->branch_id == $branch->id ? 'selected' : '' }}
+                                                                value="{{ $branch->id }}">{{ $branch->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
                                                     <label>Product</label>
-                                                    <select class="js-example-basic-single" name="product_id" style="width: 100%"
-                                                        id="product_id-{{ $purchase->id }}">
-            
+                                                    <select class="js-example-basic-single" name="product_id"
+                                                        style="width: 100%" id="product_id-{{ $purchase->id }}">
+
+
                                                         <option value="" disabled>Pilih Product</option>
                                                         @foreach ($products as $product)
                                                             <option value="{{ $product->id }}"
@@ -79,15 +109,16 @@
                                                         @endforeach
                                                     </select>
                                                 </div>
-                                                <x-form.input-text label="Jumlah" name="quantity" type="number" :value="$purchase->quantity"
-                                                    :id="'quantity-' . $purchase->id" />
+                                                <x-form.input-text label="Jumlah" name="quantity" type="number"
+                                                    :value="$purchase->quantity" :id="'quantity-' . $purchase->id" />
                                                 <x-form.input-text label="Total Harga" name="cost_price" type="number"
                                                     :value="$purchase->cost_price" :id="'cost_price-' . $purchase->id" />
-            
+
                                             </div>
-            
+
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Batal</button>
                                                 <button type="submit" class="btn btn-primary">Update</button>
                                             </div>
                                         </form>
@@ -116,6 +147,15 @@
                     <form action="{{ route('pengadaan.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="modal-body row">
+                            <div class="form-group">
+                                <label>Cabang</label>
+                                <select class="js-example-basic-single" id="branch_id" name="branch_id">
+                                    <option value="" selected disabled>Pilih Cabang</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="form-group">
                                 <label>Product</label>
                                 <select class="js-example-basic-single" id="product_id" name="product_id">
@@ -160,37 +200,47 @@
 
             // Untuk setiap modal edit
             @foreach ($purchases as $purchase)
-                $('#product_id-{{ $purchase->id }}, #quantity-{{ $purchase->id }}').on('change keyup',
-            function() {
-                    const productId = $('#product_id-{{ $purchase->id }}').val();
-                    const qty = $('#quantity-{{ $purchase->id }}').val();
-                    const selectedProduct = products.find(item => item.id == productId);
+                $('#product_id-{{ $purchase->id }}, #branch_id-{{ $purchase->id }}, #quantity-{{ $purchase->id }}')
+                    .on('change keyup', function() {
+                        const productId = $('#product_id-{{ $purchase->id }}').val();
+                        const branchId = $('#branch_id-{{ $purchase->id }}').val();
+                        const qty = $('#quantity-{{ $purchase->id }}').val();
 
-                    if (selectedProduct && qty) {
-                        const total = qty * selectedProduct.cost_price;
-                        $('#cost_price-{{ $purchase->id }}').val(total);
-                    } else {
-                        $('#cost_price-{{ $purchase->id }}').val('');
-                    }
-                });
+                        const selectedProduct = products.find(item => item.id == productId);
+                        const product = selectedProduct?.branches.find(item => item.id == branchId)?.pivot;
+
+                        if (selectedProduct && product && qty) {
+                            $('#cost_price-{{ $purchase->id }}').val(qty * product.cost_price);
+                        } else {
+                            $('#cost_price-{{ $purchase->id }}').val('');
+                        }
+                    });
             @endforeach
+
+
 
 
 
             function updateHarga() {
                 const productSelected = $('#product_id').val();
+                const branchSelected = $('#branch_id').val();
+                console.log(branchSelected)
                 const qty = $('#quantity').val();
                 const selectedProduct = products.find(item => item.id == productSelected);
+                const product = selectedProduct.branches.find((item) => item.id == branchSelected)?.pivot;
+                console.log(branchSelected)
 
                 if (selectedProduct && qty) {
-                    const total = qty * selectedProduct.cost_price;
+                    const total = qty * product.cost_price;
                     $('#cost_price').val(total);
                 } else {
                     $('#cost_price').val('');
                 }
             }
 
-            $('#product_id, #quantity').on('change keyup', updateHarga);
+            $('#product_id, #branch_id').on('change', updateHarga);
+
+            $('#quantity').on('input', updateHarga);
         });
     </script>
 @endpush

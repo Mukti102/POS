@@ -34,29 +34,30 @@
 
 
 <script>
-    document.querySelectorAll('.delete-button').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const form = this.closest('form');
+    
 
-            Swal.fire({
-                title: "Are you sure?",
-                text: "Kamu Tidak bisa Mengembalikan data ini!",
-                type: "warning",
-                showCancelButton: !0,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!",
-                confirmButtonClass: "btn btn-primary",
-                cancelButtonClass: "btn btn-danger ml-1",
-                cancelButtonText: "Cancel"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
+    $(".confirm-text").on("click", function() {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            type: "warning",
+            showCancelButton: !0,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+            confirmButtonClass: "btn btn-primary",
+            cancelButtonClass: "btn btn-danger ml-1",
+            buttonsStyling: !1,
+        }).then(function(t) {
+            t.value &&
+                Swal.fire({
+                    type: "success",
+                    title: "Deleted!",
+                    text: "Your file has been deleted.",
+                    confirmButtonClass: "btn btn-success",
+                });
         });
-    });
+    }),
 </script>
 
 
@@ -86,7 +87,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const deleteButtons = document.querySelectorAll(".confirm-text");
+        const deleteButtons = document.querySelectorAll(".delete-button");
 
         deleteButtons.forEach(button => {
             button.addEventListener("click", function(e) {

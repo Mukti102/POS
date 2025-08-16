@@ -21,7 +21,7 @@
                 <h5>
                     Rp.<span class="counters">{{ number_format($omset, 0, ',', '.') }}</span>
                 </h5>
-                <h6>Total Omset Penjualan</h6>
+                <h6>Total Omset Penjualan Hari Ini</h6>
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@
                 <h5>
                     Rp.<span class="counters">{{ number_format($profit, 0, ',', '.') }}</span>
                 </h5>
-                <h6>Total Profit</h6>
+                <h6>Total Profit Penjualan Hari Ini</h6>
             </div>
         </div>
     </div>

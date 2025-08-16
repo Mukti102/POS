@@ -5,9 +5,10 @@
     'type' => 'text',
     'value' => '',
     'prefix' => '',
+    'col' => 'col-lg-6 col-sm-6 col-12'
 ])
 
-<div class="col-lg-6 col-sm-6 col-12">
+<div class="{{$col}}">
     <div class="form-group">
         @if ($label)
             <label for="{{ $name }}">{{ $label }}</label>

@@ -4,12 +4,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0" />
-    <meta name="description" content="POS - Bootstrap Admin Template" />
+    <meta name="description" content="{{setting('site_description')}}" />
     <meta name="keywords"
         content="admin, estimates, bootstrap, business, corporate, creative, management, minimal, modern,  html5, responsive" />
     <meta name="author" content="Dreamguys - Bootstrap Admin Template" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>POS</title>
+    <title>{{setting('site_name')}}</title>
 
     @stack('styles')
     @include('includes.styles')

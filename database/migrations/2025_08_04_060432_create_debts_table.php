@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
             $table->decimal('total_debt');
-            $table->decimal('paid',10,2); // yg sudah di bayar
-            $table->decimal('remaining',10,2); //sisa hutam
+            $table->decimal('paid',20,2); // yg sudah di bayar
+            $table->decimal('remaining',20,2); //sisa hutam
             $table->string('due_date');
             $table->enum('status',['lunas','belum lunas'])->default('belum lunas');
             $table->timestamps();

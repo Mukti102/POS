@@ -19,7 +19,7 @@ class DebtController extends Controller
 
         $debts = $costumers
             ->map(function ($item) {
-                $debtTransactions = $item->transactions->where('status', '!=', 'complete');
+                $debtTransactions = $item->transactions;
 
                 if ($debtTransactions->count() == 0) {
                     return null; // return null kalau tidak ada transaksi hutang
@@ -66,8 +66,8 @@ class DebtController extends Controller
     public function detail($id)
     {
         $costumer = Costumer::with('transactions')->find($id);
-        $transactions = $costumer->transactions->where('status', '!=', 'complete');
-        $debts = $transactions->pluck('debt');
+        $transactions = $costumer->transactions;
+        $debts = $transactions->pluck('debt')->filter();
         return view('pages.debt.detail', compact('debts', 'costumer'));
     }
 

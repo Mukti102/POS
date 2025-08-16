@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('name');
             $table->integer('initial_stock');
             $table->integer('stock');
-            $table->decimal('cost_price',10,2);
-            $table->decimal('selling_price',10,2);
+            $table->decimal('cost_price',20,2);
+            $table->decimal('selling_price',20,2);
             $table->timestamps();
         });
     }

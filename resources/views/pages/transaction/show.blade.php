@@ -119,7 +119,9 @@
                                 <td style="padding: 10px; vertical-align: top">
                                     Rp {{ number_format($product->product->selling_price, 0, ',', '.') }}
                                 </td>
-                                <td style="padding: 10px; vertical-align: top">0.00</td>
+                                <td style="padding: 10px; vertical-align: top">
+                                    Rp {{ number_format($product->discount, 0, ',', '.') }}
+                                </td>
                                 <td style="padding: 10px; vertical-align: top">0.00</td>
                                 <td style="padding: 10px; vertical-align: top">
                                     Rp {{ number_format($product->subtotal, 0, ',', '.') }}
@@ -161,10 +163,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-12">
+                {{-- <div class="col-lg-12">
                     <a href="javascript:void(0);" class="btn btn-submit me-2">Update</a>
                     <a href="javascript:void(0);" class="btn btn-cancel">Cancel</a>
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>

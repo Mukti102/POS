@@ -1,6 +1,6 @@
 <div class="card mb-0">
     <div class="card-body">
-        <h4 class="card-title">Expired Products</h4>
+        <h4 class="card-title">Expired Products Cabang {{$branch->name}}</h4>
         <div class="table-responsive dataview">
             <table class="table {{$products->count() == 0 ? '' : 'datatable' }}">
                 <thead>
@@ -23,11 +23,11 @@
                                 <a href="productlist.html">{{$product->name}}</a>
                             </td>
                             <td>{{$product->category->name}}</td>
-                            <td>{{$product->stock}}</td>
+                            <td>{{$product->pivot->stock}}</td>
                             <td>
-                                @if ($product->stock <= 5)
+                                @if ($product->pivot->stock <= 5)
                                 <span class="badge bg-warning">Stock Hampir Habis</span>
-                                @elseif ($product->stock-> >= 0)
+                                @elseif ($product->pivot->stock >= 0)
                                 <span class="badge bg-danger">Stock Habis</span>
                                 @endif
                             </td>

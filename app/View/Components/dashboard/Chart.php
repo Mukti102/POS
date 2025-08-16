@@ -1,57 +1,67 @@
 <?php
 
-namespace App\View\Components\dashboard;
+namespace App\View\Components\Dashboard;
+
+
+use App\Models\Branch;
+use Carbon\Carbon;
 
 use App\Models\Transaction;
-use App\Models\TransactionItem;
+use Illuminate\Support\Facades\Auth;
 use Closure;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\Component;
 
 class Chart extends Component
 {
-    public $revenueData = [];
+    /**
+     * Create a new component instance.
+     */
+     public $revenueData = [];
     public $profitData = [];
+    public $branches;
 
     public function __construct()
     {
-        $transactions = Transaction::where('status', 'complete')->get();
+        $this->branches = Branch::all();
 
-        // Ambil semua transaksi lengkap berdasarkan bulan
-        $monthlyData = Transaction::select(
-            DB::raw('MONTH(transaction_date) as month'),
-            DB::raw('SUM(total) as revenue'),
-            DB::raw('SUM(total - (SELECT SUM(products.cost_price * transaction_items.quantity) 
-                    FROM transaction_items 
-                    JOIN products ON products.id = transaction_items.product_id 
-                    WHERE transaction_items.transaction_id = transactions.id)) as profit')
-        )
-            ->where('status', 'complete')
-            ->groupBy(DB::raw('MONTH(transaction_date)'))
+        $branchId = request()->get('branch_id') ?? Auth::user()->branch_id;
+
+        // Ambil semua transaksi selesai di branch ini + relasi produk & branch (pivot)
+        $transactions = Transaction::where('status', 'complete')
+            ->where('branch_id', $branchId)
+            ->with(['transactionItems.product.branches' => function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            }])
             ->get();
 
+        // Default bulan Jan - Dec
+        $months = range(1, 12);
+        $revenue = array_fill_keys($months, 0);
+        $profit = array_fill_keys($months, 0);
 
-        $revenue = [];
-        $profit = [];
+        foreach ($transactions as $transaction) {
+            $month = (int) Carbon::parse($transaction->transaction_date)->format('n');
 
-        // Buat array 12 bulan default
-        for ($i = 1; $i <= 12; $i++) {
-            $revenue[$i] = 0;
-            $profit[$i] = 0;
+            // Tambah revenue (omzet)
+            $revenue[$month] += $transaction->total;
+
+            // Hitung profit: total - (modal * qty)
+            foreach ($transaction->transactionItems as $item) {
+                $branchProduct = $item->product->branches->first(); // branch yg sesuai sudah difilter di with()
+                $costPrice = $branchProduct?->pivot?->cost_price ?? 0;
+                $profit[$month] += ($item->price - $costPrice) * $item->quantity;
+            }
         }
 
-        foreach ($monthlyData as $data) {
-            $revenue[$data->month] = (int) $data->revenue;
-            $profit[$data->month] = (int) $data->profit;
-        }
-
-        // Simpan ke properti untuk dikirim ke Blade
+        // Simpan ke public property untuk Blade
         $this->revenueData = array_values($revenue);
         $this->profitData = array_values($profit);
-
     }
 
+    /**
+     * Get the view / contents that represent the component.
+     */
     public function render(): View|Closure|string
     {
         return view('components.dashboard.chart');

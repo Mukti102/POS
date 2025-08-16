@@ -2,22 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the products.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->get();
-        return view('pages.product.index', compact('products'));
+        $branchId = $request->input('branch_id');
+        $products = Product::with([
+            'category',
+            'branches' => function ($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branches.id', $branchId);
+                }
+            }
+        ])
+            ->when($branchId, function ($query) use ($branchId) {
+                $query->whereHas('branches', function ($q) use ($branchId) {
+                    $q->where('branches.id', $branchId);
+                });
+            })
+            ->get();
+
+        $branches = Branch::all();
+
+        return view('pages.product.index', compact('products', 'branches', 'branchId'));
     }
+
 
     /**
      * Show the form for creating a new product.
@@ -25,7 +46,8 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view('pages.product.create', compact('categories'));
+        $branches = Branch::all();
+        return view('pages.product.create', compact('categories', 'branches'));
     }
 
     /**
@@ -37,33 +59,58 @@ class ProductController extends Controller
             'category_id'   => 'required|exists:categories,id',
             'name'          => 'required|string|max:255',
             'sku'           => 'required|string|max:100|unique:products,sku',
-            'initial_stock' => 'required|numeric|min:0',
-            'cost_price'    => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0',
+            'branches'      => 'required|array',
+            'branches.*.branch_id'      => 'required|exists:branches,id',
+            'branches.*.initial_stock'  => 'required|numeric|min:0',
+            'branches.*.cost_price'     => 'required|numeric|min:0',
+            'branches.*.selling_price'  => 'required|numeric|min:0',
             'image'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-
-        $validated['stock'] = $validated['initial_stock'];
-
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
-        }
-
         try {
-            Product::create($validated);
+            DB::beginTransaction();
+
+            $productData = [
+                'category_id' => $validated['category_id'],
+                'name'        => $validated['name'],
+                'sku'         => $validated['sku'],
+            ];
+
+            if ($request->hasFile('image')) {
+                $productData['image'] = $request->file('image')->store('products', 'public');
+            }
+
+            $product = Product::create($productData);
+
+            $pivotData = [];
+            foreach ($validated['branches'] as $branch) {
+                $pivotData[$branch['branch_id']] = [
+                    'initial_stock' => $branch['initial_stock'],
+                    'stock'         => $branch['initial_stock'],
+                    'cost_price'    => $branch['cost_price'],
+                    'selling_price' => $branch['selling_price'],
+                ];
+            }
+
+            $product->branches()->sync($pivotData);
+
+            DB::commit();
+
             return redirect()->route('product.index')->with('success', 'Produk berhasil ditambahkan.');
         } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error create product', ['message' => $e->getMessage()]);
             return back()->with('error', 'Gagal menambahkan produk: ' . $e->getMessage())->withInput();
         }
     }
+
 
     /**
      * Display the specified product.
      */
     public function show(Product $product)
     {
-        $product->load('category');
+        $product->load('category','branches');
         return view('pages.product.show', compact('product'));
     }
 
@@ -73,7 +120,8 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::all();
-        return view('pages.product.edit', compact('product', 'categories'));
+        $branches = Branch::all();
+        return view('pages.product.edit', compact('product', 'categories', 'branches'));
     }
 
     /**
@@ -84,14 +132,15 @@ class ProductController extends Controller
         $validated = $request->validate([
             'category_id'   => 'required|exists:categories,id',
             'name'          => 'required|string|max:255',
-            'sku'           => 'required|string|max:100|unique:products,sku,' . $product->id,
-            'initial_stock' => 'required|numeric|min:0',
-            'cost_price'    => 'required|numeric|min:0',
-            'selling_price' => 'required|numeric|min:0',
+            'sku'           => 'required|string|max:100',
+            'branches'      => 'required|array',
+            'branches.*.branch_id'      => 'required|exists:branches,id',
+            'branches.*.initial_stock'  => 'required|numeric|min:0',
+            'branches.*.cost_price'     => 'required|numeric|min:0',
+            'branches.*.selling_price'  => 'required|numeric|min:0',
             'image'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $validated['stock'] = $validated['initial_stock'];
 
         if ($request->hasFile('image')) {
             // Delete old image if exists
@@ -103,10 +152,37 @@ class ProductController extends Controller
         }
 
         try {
-            $product->update($validated);
-            return redirect()->route('product.index')->with('success', 'Produk berhasil diperbarui.');
+            DB::beginTransaction();
+
+            $productData = [
+                'category_id' => $validated['category_id'],
+                'name'        => $validated['name'],
+                'sku'         => $validated['sku'],
+                'image'       => $request->hasFile('image') ?  $validated['image'] : $product->image
+            ];
+
+
+            $product->update($productData);
+
+            $pivotData = [];
+            foreach ($validated['branches'] as $branch) {
+                $pivotData[$branch['branch_id']] = [
+                    'initial_stock' => $branch['initial_stock'],
+                    'stock'         => $branch['initial_stock'],
+                    'cost_price'    => $branch['cost_price'],
+                    'selling_price' => $branch['selling_price'],
+                ];
+            }
+
+            $product->branches()->sync($pivotData);
+
+            DB::commit();
+
+            return redirect()->route('product.index')->with('success', 'Produk berhasil Di Perbarui');
         } catch (Exception $e) {
-            return back()->with('error', 'Gagal memperbarui produk: ' . $e->getMessage())->withInput();
+            DB::rollBack();
+            Log::error('Error create product', ['message' => $e->getMessage()]);
+            return back()->with('error', 'Gagal menambahkan produk: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -116,13 +192,25 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         try {
+            DB::beginTransaction();
+
+            // Hapus relasi pivot
+            $product->branches()->detach();
+
+            // Hapus gambar jika ada
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
 
+            // Hapus produk
             $product->delete();
+
+            DB::commit();
+
             return redirect()->route('product.index')->with('success', 'Produk berhasil dihapus.');
         } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error delete product', ['message' => $e->getMessage()]);
             return back()->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
         }
     }

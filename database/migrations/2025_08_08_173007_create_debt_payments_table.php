@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('debt_payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('debt_id')->constrained()->onDelete('cascade');
-            $table->decimal('amount',10,2);
+            $table->decimal('amount',20,2);
             $table->string('payment_date');
             $table->text('note')->nullable();
             $table->timestamps();

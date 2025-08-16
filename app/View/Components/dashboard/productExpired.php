@@ -1,25 +1,30 @@
 <?php
 
-namespace App\View\Components\dashboard;
-
-use App\Models\Product;
+namespace App\View\Components\Dashboard;
+use App\Models\Branch;
+use Illuminate\Support\Facades\Auth;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class productExpired extends Component
+class ProductExpired extends Component
 {
     /**
      * Create a new component instance.
      */
     public $products;
-    public function __construct()
-    {
-        $products = Product::with('category')->get()->filter(function($product){
-            return $product->stock <= 5 ;
-        });
+    public $branch;
 
-        $this->products = $products;
+    public function __construct()
+    {   
+        $branchId = request()->get('branch_id') ?? Auth::user()->branch_id;
+
+        $branch = Branch::with(['products' => function($query) {
+            $query->wherePivot('stock', '<', 5); // stok kurang dari 5
+        }])->find($branchId);
+
+        $this->products = $branch ? $branch->products : collect();
+        $this->branch = $branch;
     }
 
     /**

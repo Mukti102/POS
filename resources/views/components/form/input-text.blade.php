@@ -4,9 +4,11 @@
     'placeholder' => '',
     'type' => 'text',
     'value' => '',
+    'col' => 'col-lg-6 col-sm-6 col-12',
+    'id' => null
 ])
 
-<div class="col-lg-6 col-sm-6 col-12">
+<div class=" {{ $col }}">
     <div class="form-group">
         <label for="{{ $name }}">{{ $label }}</label>
         <input {{ $attributes }} id="{{ $id ? $id : $name }}"

@@ -30,17 +30,20 @@
                                 <div class="tab_content {{ $key == 0 ? 'active' : '' }}" data-tab="{{ $category->id }}">
                                     <div class="row">
                                         @foreach ($category->products as $product)
+                                            @php
+                                                $pivot = $product->branches[0]->pivot;
+                                            @endphp
                                             <div class="col-lg-3 col-sm-6 d-flex">
                                                 <div class="productset flex-fill" data-id="{{ $product->id }}"
                                                     data-name="{{ $product->name }}"
-                                                    data-price="{{ $product->selling_price }}"
+                                                    data-price="{{ $pivot->selling_price }}"
                                                     data-category="{{ $product->category->name }}"
-                                                    data-stock="{{ $product->stock }}"
+                                                    data-stock="{{ $pivot->stock }}"
                                                     data-image="{{ asset('storage/' . $product->image) }}">
                                                     <div class="productsetimg">
                                                         <img src="{{ asset('storage/' . $product->image) }}"
                                                             alt="img" />
-                                                        <h6>Qty: {{ $product->stock }}</h6>
+                                                        <h6>Qty: {{ $pivot->stock }}</h6>
                                                         <div class="check-product">
                                                             <i class="fa fa-check"></i>
                                                         </div>
@@ -48,7 +51,8 @@
                                                     <div class="productsetcontent">
                                                         <h5>{{ $product->category->name }}</h5>
                                                         <h4>{{ $product->name }}</h4>
-                                                        <h6>${{ number_format($product->selling_price, 2) }}</h6>
+                                                        <h6>Rp. {{ number_format($pivot->selling_price, 0, ',', '.') }}
+                                                        </h6>
                                                     </div>
                                                 </div>
                                             </div>
@@ -118,7 +122,8 @@
                                         </div>
                                         <div class="select-split">
                                             <div class="select-group w-100">
-                                                <x-form.input-group name="discount" value="0" prefix="%" type="number" placeholder="Discount"  />
+                                                <x-form.input-group name="discount" value="0" prefix="%"
+                                                    type="number" placeholder="Discount" />
                                             </div>
                                         </div>
                                     </div>
@@ -242,6 +247,30 @@
         </div>
     </div>
 
+
+    <!-- Modal Diskon -->
+    <div class="modal fade" id="discountModal" tabindex="-1" aria-labelledby="discountModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="discountModalLabel">Set Diskon</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="discountProductId">
+                    <div class="mb-3">
+                        <label for="discountAmount" class="form-label">Diskon (Rp)</label>
+                        <input type="number" class="form-control" id="discountAmount" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="saveDiscountBtn">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <x-pos.recent-transaction :transactions="$transactions" />
 @endsection
 
@@ -306,6 +335,15 @@
                 $input.val(newQty);
             });
 
+
+            $(document).on('input','.quantity-field',function(){
+                const value = $(this).val();
+                const productId = $(this).closest('li').data('product-id');
+                
+                updateCartItemQuantity(productId,value);
+ 
+            });
+
             $(document).on('click', '.button-minus', function() {
                 const $input = $(this).closest('.input-groups').find('.quantity-field');
                 const productId = $(this).closest('li').data('product-id');
@@ -319,7 +357,7 @@
 
             // Delete product from cart
             $(document).on('click', '.delete-item', function() {
-                const productId = $(this).closest('li').data('product-id');
+                const productId = $(this).data('product-id');
                 removeFromCart(productId);
             });
 
@@ -459,6 +497,7 @@
                 } else {
                     cart.push({
                         id: product.id,
+                        discount: 0,
                         name: product.name,
                         price: product.price,
                         category: product.category,
@@ -506,8 +545,6 @@
                         const itemTotal = item.price * item.quantity;
                         $cartItems.append(`
                             
-
-
  <ul class="product-lists" >
                                 <li data-product-id="${item.id}">
                         <div class="productimg">
@@ -538,8 +575,8 @@
                                  <div class="input-groups">
                                                 <input type="button" value="-"
                                                     class="button-minus dec button" />
-                                                <input type="text" name="child" value="${item.quantity}"
-                                                    class="quantity-field" readonly />
+                                                <input type="text"  name="child" value="${item.quantity}"
+                                                    class="quantity-field" />
                                                 <input type="button" value="+"
                                                     class="button-plus inc button" />
                                             </div>
@@ -548,12 +585,20 @@
                           </div>
                         </div>
                       </li>
-                      <li>${formatRupiah(itemTotal)}</li>
                       <li>
-                        <a class="confirm-text" href="javascript:void(0);"
+                        ${formatRupiah(itemTotal)}
+                        </li>
+                      <li class="d-flex gap-2">
+                       
+                        <a class="confirm-text delete-item" data-product-id="${item.id}" href="javascript:void(0);"
                           ><img src="/assets/img/icons/delete-2.svg" alt="img"
                         /></a>
+                         <a class="confirm-text fs-6 btn-discount" data-product-id="${item.id}" href="javascript:void(0);"
+                          >
+                          <i class="fa fa-tags"></i>
+                          </a>
                       </li>
+                      
                       </ul>
                         `);
                     });
@@ -563,18 +608,49 @@
                 updateCheckoutButton();
             }
 
-            $('#discount').on('input',function(){
+            $('#discount').on('input', function() {
                 calculateTotals()
                 updateTotals();
             })
 
 
+           
+
+
+            $(document).on('click', '.btn-discount', function() {
+                const productId = $(this).data('product-id');
+                const cartItem = cart.find(item => item.id === productId);
+                if (cartItem) {
+                    $('#discountProductId').val(productId);
+                    $('#discountAmount').val(cartItem.discount || 0);
+                    $('#discountModal').modal('show');
+                }
+            });
+
+
+            $('#saveDiscountBtn').on('click', function() {
+                const productId = $('#discountProductId').val();
+                const discountAmount = parseFloat($('#discountAmount').val()) || 0;
+                const cartItem = cart.find(item => item.id == productId);
+
+                if (cartItem) {
+                    cartItem.discount = discountAmount;
+                    updateCartDisplay();
+                }
+
+                $('#discountModal').modal('hide');
+            });
+
+
+
             function calculateTotals() {
                 const inputDiscount = parseFloat($('#discount').val());
-                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const subtotal = cart.reduce((sum, item) => {
+                    return sum + ((item.price * item.quantity) - item.discount);
+                }, 0);
                 const discount = inputDiscount;
-                const total = subtotal -  subtotal * (inputDiscount / 100);
-                
+                const total = subtotal - subtotal * (inputDiscount / 100);
+
                 return {
                     subtotal,
                     discount,
@@ -585,7 +661,6 @@
             function updateTotals() {
                 const totals = calculateTotals();
                 const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                console.log(totals)
                 $('#totalItemsText').text(`Total items : ${totalItems}`);
                 $('#subtotalDisplay').text(`${formatRupiah(totals.subtotal)}`);
                 $('#discountDisplay').text(`${totals.discount}%`);

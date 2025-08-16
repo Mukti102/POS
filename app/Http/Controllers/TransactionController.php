@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Costumer;
 use App\Models\Product;
@@ -10,6 +11,7 @@ use App\Models\TransactionItem;
 use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\json;
@@ -17,17 +19,32 @@ use function PHPSTORM_META\map;
 
 class TransactionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $transactions = Transaction::with('costumer')->get();
-        return view('pages.transaction.index', compact('transactions'));
+        $branchId = $request->input('branch_id') ?? 'all';
+        $transactions = Transaction::with('costumer')
+            ->when($branchId !== 'all', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->get();
+        $branches = Branch::all();
+        return view('pages.transaction.index', compact('transactions', 'branches', 'branchId'));
     }
 
     public function pos()
     {
-        $categories = Category::with(['products' => function ($query) {
-            $query->where('stock', '>', 0);
-        }])->get();
+        $auth = Auth::user();
+        $categories = Category::with([
+            'products' => function ($query) use ($auth) {
+                $query->whereHas('branches', function ($branchQuery) use ($auth) {
+                    $branchQuery->where('branch_id', $auth->branch_id);
+                })
+                    ->with(['branches' => function ($branchQuery) use ($auth) {
+                        $branchQuery->where('branch_id', $auth->branch_id);
+                    }]);
+            }
+        ])->get();
+
         $costumers = Costumer::all();
         $transactions = Transaction::with('costumer')->where('transaction_date', now()->format('Y-m-d'))->get();
         return view('pages.transaction.pos', compact('categories', 'costumers', 'transactions'));
@@ -44,8 +61,10 @@ class TransactionController extends Controller
 
     public function checkout(Request $request)
     {
+        $auth = Auth::user();
         $jsonCart = $request->cart_data;
         $cart = json_decode($jsonCart);
+
 
         $reference = 'TRX-' . strtoupper(Str::random(6)) . '-' . now()->format('YmdHis');
 
@@ -58,6 +77,7 @@ class TransactionController extends Controller
 
             // Buat transaksi utama
             $transaction = Transaction::create([
+                'branch_id' => $auth->branch_id,
                 'costumer_id' => $request->customer_id,
                 'total' => $total,
                 'paid' => $request->paid,
@@ -72,9 +92,10 @@ class TransactionController extends Controller
             // Simpan item transaksi
             foreach ($cart as $prod) {
                 $transaction->transactionItems()->create([
+                    'discount' => $prod->discount,
                     'product_id' => $prod->id,
                     'quantity' => $prod->quantity,
-                    'subtotal' => $prod->price * $prod->quantity,
+                    'subtotal' => ($prod->price * $prod->quantity) - $prod->discount,
                 ]);
 
                 $this->updateProduct($prod->id, -$prod->quantity);
@@ -149,7 +170,7 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        $transaction->load('costumer', 'transactionItems.product');
+        $transaction->load('costumer', 'transactionItems.product.branches');
         return view('pages.transaction.show', compact('transaction'));
     }
 
@@ -242,16 +263,20 @@ class TransactionController extends Controller
 
     protected function updateProduct($productId, $quantityChange)
     {
+        $branchId = Auth::user()->branch_id;
         $product = Product::findOrFail($productId);
 
-        $newStock = $product->stock + $quantityChange;
+        $pivot = $product->branches()->where('branch_id', $branchId)->first();
+
+        $newStock = $pivot->pivot->stock + $quantityChange;
 
         if ($newStock < 0) {
             throw new \Exception("Stok produk tidak mencukupi.");
         }
 
-        $product->stock = $newStock;
-        $product->save();
+        $updateData = ['stock' => $newStock];
+
+        $product->branches()->updateExistingPivot($branchId, $updateData);
     }
 
 

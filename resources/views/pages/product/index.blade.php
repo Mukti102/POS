@@ -2,7 +2,7 @@
 @section('content')
     <x-alert />
     <div>
-        <x-layout.page-header title="Product  list" subtitle="View/Search product">
+        <x-layout.page-header title="Data Product Cabang {{ optional($branches->where('id', $branchId)->first())->name }}" subtitle="View/Search product">
             <div class="page-btn">
                 <a href="{{ route('product.create') }}" class="btn btn-added">
                     <img src="assets/img/icons/plus.svg" class="me-1" alt="img" />Tambah Product
@@ -14,15 +14,16 @@
             <x-table.filter-input>
                 <div class="col-lg-2 col-sm-6 col-12">
                     <div class="form-group">
-                        <select class="select">
-                            <option>Choose Category</option>
-                            <option>Computers</option>
+                        <select class="select" name="branch_id">
+                            @foreach ($branches as $branch)
+                                <option {{$branch->id == $branchId ? 'selected' : ''}} value={{ $branch->id }}>{{ $branch->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
             </x-table.filter-input>
             <x-table.table-responsive>
-                <table class="table {{ $products->count() >= 0 ? '' : 'datanew' }}">
+                <table class="table {{ $products->count() <= 0 ? '' : 'datanew' }}">
                     <thead>
                         <tr>
                             <th>
@@ -43,7 +44,7 @@
                     </thead>
                     <tbody>
                         @forelse ($products as $product)
-                            <tr>
+                        <tr>
                                 <td>
                                     <label class="checkboxs">
                                         <input type="checkbox" />
@@ -59,10 +60,19 @@
                                 </td>
                                 <td>{{ $product->sku }}</td>
                                 <td>{{ $product->category->name }}</td>
-                                <td>Rp {{ number_format($product->cost_price, 0, ',', '.') }}</td>
-                                <td>Rp {{ number_format($product->selling_price, 0, ',', '.') }}</td>
-                                <td>{{ $product->initial_stock }}</td>
-                                <td>{{ $product->stock }}</td>
+                                <td>
+                                   Rp.{{number_format($product->branches->first()->pivot->cost_price, 0, ',', '.')}}
+                                </td>
+                                <td>
+                                   Rp.{{number_format($product->branches->first()->pivot->selling_price, 0, ',', '.')}}
+                                </td>
+                                <td>
+                                  {{$product->branches->first()->pivot->initial_stock}}
+
+                                </td>
+                                <td>
+                                  {{$product->branches->first()->pivot->stock}}
+                                </td>
                                 <td class="text-center">
                                     <a class="action-set" href="javascript:void(0);" data-bs-toggle="dropdown"
                                         aria-expanded="true">
@@ -76,7 +86,8 @@
                                         </li>
                                         <li>
                                             <a href="{{ route('product.edit', $product->id) }}" class="dropdown-item"><img
-                                                    src="assets/img/icons/edit.svg" class="me-2" alt="img" />Product Edit</a>
+                                                    src="assets/img/icons/edit.svg" class="me-2" alt="img" />Product
+                                                Edit</a>
                                         </li>
                                         <li>
                                             <form action="{{ route('product.destroy', $product->id) }}" method="POST">

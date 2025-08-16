@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('costumer_id')->constrained()->onDelete('cascade');
-            $table->decimal('total',10,2);
-            $table->decimal('paid',10,2);
-            $table->decimal('change',10,2);
+            $table->decimal('total',20,2);
+            $table->decimal('paid',20,2);
+            $table->decimal('change',20,2);
             $table->string('transaction_date');
             $table->timestamps();
         });

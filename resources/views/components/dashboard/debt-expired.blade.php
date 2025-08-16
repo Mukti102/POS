@@ -15,7 +15,8 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive dataview">
-                        <table class="table datatable">
+                        <table class="table {{ $todayDebt->isNotEmpty() ? 'datatable' : '' }}">
+
                             <thead>
                                 <tr>
                                     <th>No</th>

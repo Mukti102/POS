@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Branch;
 use App\Models\Costumer;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -16,9 +17,18 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+        $branch = Branch::create([
+            'name' => 'Toko 1',
+            'address' => 'Jakarta,Jejo,Indonesia',
+            'phone' => '081226271819'
+        ]);
+
+
         User::factory()->create([
             'name' => 'Test User',
+            'branch_id' => $branch->id,
             'email' => 'test@example.com',
+            'role' => 'superadmin'
         ]);
 
         Costumer::create([
@@ -26,5 +36,6 @@ class DatabaseSeeder extends Seeder
             'phone' => '081336920647',
             'address' => ''
         ]);
+        
     }
 }
